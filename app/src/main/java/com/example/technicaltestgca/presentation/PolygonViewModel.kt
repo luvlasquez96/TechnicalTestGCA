@@ -9,6 +9,8 @@ import com.example.technicaltestgca.domain.usecase.GetPolygonsUseCase
 import com.example.technicaltestgca.domain.usecase.GetSavedPolygonUseCase
 import com.example.technicaltestgca.domain.usecase.SavePolygonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,8 +21,8 @@ class PolygonsViewModel @Inject constructor(
     private val savePolygonUseCase: SavePolygonUseCase
 ) : ViewModel() {
 
-    private val _viewState = MutableLiveData<ViewState>()
-    val viewState: LiveData<ViewState> get() = _viewState
+    private var _viewState = MutableStateFlow<ViewState>(ViewState.Loading)
+    val viewState = _viewState.asStateFlow()
 
     fun fetchPolygons() {
         _viewState.value = ViewState.Loading
