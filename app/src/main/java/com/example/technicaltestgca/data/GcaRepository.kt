@@ -6,4 +6,6 @@ interface GcaRepository {
     suspend fun getPolygons(): List<Polygon>
     suspend fun savePolygon(polygon: Polygon)
     suspend fun getSavedPolygon(): Polygon?
+
+    suspend fun deletePolygon(polygon: Polygon)
 }

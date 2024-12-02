@@ -44,4 +44,10 @@ class LocalGcaDataSource @Inject constructor(
             gson.fromJson(it, PolygonResponse::class.java)
         }
     }
+
+    fun deletePolygon(polygon: PolygonResponse) {
+        val cachedPolygons = getCachedPolygons().toMutableList()
+        cachedPolygons.removeIf { it.points == polygon.points }
+        cachePolygons(cachedPolygons)
+    }
 }

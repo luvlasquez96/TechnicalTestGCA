@@ -3,6 +3,7 @@ package com.example.technicaltestgca.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.technicaltestgca.domain.model.Polygon
+import com.example.technicaltestgca.domain.usecase.DeletePolygonUseCase
 import com.example.technicaltestgca.domain.usecase.GetPolygonsUseCase
 import com.example.technicaltestgca.domain.usecase.GetSavedPolygonUseCase
 import com.example.technicaltestgca.domain.usecase.SavePolygonUseCase
@@ -16,7 +17,8 @@ import javax.inject.Inject
 class PolygonsViewModel @Inject constructor(
     private val getPolygonsUseCase: GetPolygonsUseCase,
     private val getSavedPolygonUseCase: GetSavedPolygonUseCase,
-    private val savePolygonUseCase: SavePolygonUseCase
+    private val savePolygonUseCase: SavePolygonUseCase,
+    private val deletePolygonUseCase: DeletePolygonUseCase
 ) : ViewModel() {
 
     private var _viewState = MutableStateFlow<ViewState>(ViewState.Loading)
@@ -62,6 +64,17 @@ class PolygonsViewModel @Inject constructor(
                 fetchPolygons()
             } catch (e: Exception) {
                 _viewState.value = ViewState.Error(e.message ?: "Failed to save polygon.")
+            }
+        }
+    }
+
+    fun deletePolygon(polygon: Polygon) {
+        viewModelScope.launch {
+            try {
+                deletePolygonUseCase(polygon)
+                fetchPolygons()
+            } catch (e: Exception) {
+                _viewState.value = ViewState.Error(e.message ?: "Failed to delete polygon.")
             }
         }
     }

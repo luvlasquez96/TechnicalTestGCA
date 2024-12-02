@@ -28,4 +28,8 @@ class GcaRepositoryImpl @Inject constructor(
     override suspend fun getSavedPolygon(): Polygon? {
         return localDataSource.getSavedPolygon()?.toDomainModel()
     }
+
+    override suspend fun deletePolygon(polygon: Polygon) {
+        localDataSource.deletePolygon(polygon.toDataModel())
+    }
 }

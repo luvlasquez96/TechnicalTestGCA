@@ -1,7 +1,8 @@
 package com.example.technicaltestgca.presentation
 
 import android.widget.Toast
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +23,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,16 +43,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.technicaltestgca.domain.model.Point
 import com.example.technicaltestgca.domain.model.Polygon
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SelectionScreen(
     onNavigateToDesign: (Polygon, Int, Float) -> Unit,
 ) {
     val viewModel: PolygonsViewModel = hiltViewModel()
     val viewState by viewModel.viewState.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
+    var showCreatePolygonDialog by remember { mutableStateOf(false) }
+    var showDeletePolygonDialog by remember { mutableStateOf(false) }
+    var polygonToDelete by remember { mutableStateOf<Polygon?>(null) }
     var sidesCount by remember { mutableIntStateOf(3) }
-    var scale by remember { mutableStateOf(1.0f) }
+    var scale by remember { mutableFloatStateOf(1.0f) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -98,15 +103,21 @@ fun SelectionScreen(
                     items(polygons) { polygon ->
                         ListItem(
                             headlineContent = { Text(polygon.name) },
-                            modifier = Modifier.clickable {
-                                onNavigateToDesign(polygon, sidesCount, scale)
-                            }
+                            modifier = Modifier.combinedClickable(
+                                onClick = {
+                                    onNavigateToDesign(polygon, sidesCount, scale)
+                                },
+                                onLongClick = {
+                                    polygonToDelete = polygon
+                                    showDeletePolygonDialog = true
+                                }
+                            )
                         )
                     }
                     item {
                         OutlinedButton(
                             onClick = {
-                                showDialog = true
+                                showCreatePolygonDialog = true
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -122,12 +133,35 @@ fun SelectionScreen(
         }
     }
 
-    if (showDialog) {
+    if (showDeletePolygonDialog) {
+        polygonToDelete?.let { polygon ->
+            AlertDialog(
+                onDismissRequest = { showDeletePolygonDialog = false },
+                title = { Text("Delete Polygon") },
+                text = { Text("Are you sure you want to delete this polygon?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deletePolygon(polygon)
+                        showDeletePolygonDialog = false
+                    }) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeletePolygonDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+
+    if (showCreatePolygonDialog) {
         var sidesCountText by remember { mutableStateOf(sidesCount.toString()) }
         var scaleText by remember { mutableStateOf(scale.toString()) }
 
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showCreatePolygonDialog = false },
             title = { Text("Enter Number of Sides") },
             text = {
                 Column {
@@ -170,7 +204,7 @@ fun SelectionScreen(
                         if (newSidesCount != null && newSidesCount > 2) {
                             sidesCount = newSidesCount
                             scale = newScale ?: 1.0f
-                            showDialog = false
+                            showCreatePolygonDialog = false
 
                             val radius = 100f
                             val angleStep = (2 * Math.PI / sidesCount).toFloat()
@@ -195,6 +229,11 @@ fun SelectionScreen(
                     }
                 ) {
                     Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreatePolygonDialog = false }) {
+                    Text("Cancel")
                 }
             }
         )
