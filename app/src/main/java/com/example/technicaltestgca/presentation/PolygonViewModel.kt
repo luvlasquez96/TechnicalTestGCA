@@ -1,7 +1,5 @@
 package com.example.technicaltestgca.presentation
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.technicaltestgca.domain.model.Polygon
@@ -48,7 +46,7 @@ class PolygonsViewModel @Inject constructor(
                 if (savedPolygon != null) {
                     _viewState.value = ViewState.SavedPolygonLoaded(savedPolygon)
                 } else {
-                    _viewState.value = ViewState.Error("No saved polygon found.")
+                    _viewState.value = ViewState.PolygonsLoaded(emptyList())
                 }
             } catch (e: Exception) {
                 _viewState.value = ViewState.Error(e.message ?: "Failed to fetch saved polygon.")
@@ -57,11 +55,11 @@ class PolygonsViewModel @Inject constructor(
     }
 
     fun savePolygon(polygon: Polygon) {
-        _viewState.value = ViewState.Loading
         viewModelScope.launch {
             try {
                 savePolygonUseCase(polygon)
                 _viewState.value = ViewState.PolygonSaved
+                fetchPolygons()
             } catch (e: Exception) {
                 _viewState.value = ViewState.Error(e.message ?: "Failed to save polygon.")
             }

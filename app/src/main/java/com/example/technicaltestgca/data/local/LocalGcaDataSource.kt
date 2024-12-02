@@ -4,12 +4,14 @@ import android.content.Context
 import com.example.technicaltestgca.data.remote.model.PolygonResponse
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class LocalGcaDataSource@Inject constructor(
-    private val context: Context
+class LocalGcaDataSource @Inject constructor(
+    @ApplicationContext private val context: Context
 ) {
-    private val sharedPreferences = context.getSharedPreferences("PolygonCache", Context.MODE_PRIVATE)
+    private val sharedPreferences =
+        context.getSharedPreferences("PolygonCache", Context.MODE_PRIVATE)
     private val gson = Gson()
 
     fun getCachedPolygons(): List<PolygonResponse> {
@@ -28,6 +30,9 @@ class LocalGcaDataSource@Inject constructor(
     }
 
     fun savePolygon(polygon: PolygonResponse) {
+        val cachedPolygons = getCachedPolygons().toMutableList()
+        cachedPolygons.add(polygon)
+        cachePolygons(cachedPolygons)
         sharedPreferences.edit()
             .putString("saved_polygon", gson.toJson(polygon))
             .apply()
